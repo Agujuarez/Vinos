@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: contraseña
+      POSTGRES_DB: basedatos
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: "redis:latest"
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: elasticsearch_container
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    restart: always
+
+  mongodb:
+    image: "mongo:latest"
+    container_name: mongodb_container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: usuario
+      MONGO_INITDB_ROOT_PASSWORD: contraseña
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+  hdfs:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8
+    container_name: hdfs_namenode
+    environment:
+      - CLUSTER_NAME=test
+    volumes:
+      - hdfs_data:/hadoop/dfs/name
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    restart: always
+
+  spark:
+    image: bde2020/spark-master:2.4.4-hadoop2.7
+    container_name: spark_master
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "7077:7077"  # Puerto para el master de Spark
+      - "8080:8080"  # Interfaz web de Spark
+    restart: always
+
+  spark-worker:
+    image: bde2020/spark-worker:2.4.4-hadoop2.7
+    container_name: spark_worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER=spark://spark_master:7077
+    ports:
+      - "8081:8081"  # Interfaz web del worker de Spark
+    restart: always
+
+volumes:
+  pgdata:
+  redis_data:
+  esdata:
+  mongo_data:
+  hdfs_data:

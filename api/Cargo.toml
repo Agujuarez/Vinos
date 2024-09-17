@@ -7,3 +7,9 @@ edition = "2021"
 actix-web = "4.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tokio-postgres = "0.7"
+tokio = { version = "1", features = ["full"] }
+redis = { version = "0.24", features = ["aio", "tokio-comp"] }
+elasticsearch = "8.15.0-alpha.1"
+mongodb = "2.0"
+hdfs = "0.0.4"

@@ -90,6 +90,23 @@ services:
     networks:
       - sparky
 
+  django-app:
+    build: ./path_to_your_django_project
+    container_name: django_container
+    volumes:
+      - ./path_to_your_django_project:/usr/src/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - sparky
+    environment:
+      - DJANGO_SETTINGS_MODULE=myproject.settings.production
+      - SECRET_KEY=your_secret_key_here
+      - DATABASE_URL=postgres://usuario:contraseña@db:5432/basedatos
+
 networks:
   sparky:
 

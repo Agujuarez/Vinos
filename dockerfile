@@ -9,7 +9,7 @@ RUN apt-get update && \
     apt-get install -y software-properties-common wget gnupg && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
-    apt-get install -y curl openjdk-8-jdk python3.12 && \
+    apt-get install -y curl openjdk-8-jdk python3.12 python3-pip && \
     apt-get clean
 
 # Instala el cliente de MongoDB (mongo shell)
@@ -31,8 +31,25 @@ ENV PATH=$SPARK_HOME/bin:$PATH
 ENV PYSPARK_PYTHON=python3.12
 ENV PYSPARK_DRIVER_PYTHON=python3.12
 
-# Expone los puertos necesarios para Spark
-EXPOSE 8080 8081 7077
+# Instalar Gunicorn y las dependencias de Django
+COPY requirements.txt /usr/src/app/
+RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt
 
-# Comando de inicio para el contenedor de Spark
-CMD ["/usr/local/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+# Copia el proyecto Django al contenedor
+COPY . /usr/src/app
+
+# Recoge archivos estáticos de Django
+RUN cd /usr/src/app && python3.12 manage.py collectstatic --noinput
+
+# No ejecutar la aplicación como root
+RUN useradd django
+USER django
+
+# Define el directorio de trabajo
+WORKDIR /usr/src/app
+
+# Expone los puertos necesarios para Spark y Django
+EXPOSE 8080 8081 7077 8000
+
+# Comando para iniciar Gunicorn con Django
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "myproject.wsgi:application"]
